@@ -2,7 +2,7 @@
 #include <string.h>
 #include <dirent.h>
 
-void listFiles(const char* dirname){
+void listFiles(const char* dirname){ //function that lists all the files recursively given a directory name
     DIR* dir = opendir(dirname);
     if (dir == NULL) {
         perror("opendir");
@@ -11,13 +11,15 @@ void listFiles(const char* dirname){
     struct dirent* entity;
     entity = readdir(dir);
     while (entity != NULL) {
-        printf("%hhd %s/%s\n", entity->d_type, dirname, entity->d_name);
-        if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0){
-            char path[100] = { 0 };
-            strcat(path, dirname);
-            strcat(path, "/");
-            strcat(path, entity->d_name);
-            listFiles(path);
+        if(entity->d_name[0] != '.') {
+            printf("%hhd %s/%s\n", entity->d_type, dirname, entity->d_name);
+            if(entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0){
+                char path[100] = { 0 };
+                strcat(path, dirname);
+                strcat(path, "/");
+                strcat(path, entity->d_name);
+                listFiles(path);
+            }
         }
         entity = readdir(dir);
     }
