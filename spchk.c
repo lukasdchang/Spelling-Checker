@@ -10,44 +10,49 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
 
-char dictWords[MAX_DICT_WORDS][MAX_WORD_LENGTH];
-int numDictWords = 0;
-
-typedef struct{
-    int word;
+typedef struct {
+    char word[MAX_WORD_LENGTH];
     int line;
     int column;
 } dictWord;
 
+char dictWords[MAX_DICT_WORDS][MAX_WORD_LENGTH];
+int numDictWords = 0;
+
 void spellChecker(const char* filename);
 
-void readDict(const char* filename) {
-    int dictionary = open(filename, O_RDONLY);
-    if (dictionary == -1) {
-        perror("Failed to open dictionary file");
+dictWord* storeDictWords(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        exit(EXIT_FAILURE);
+    }
+
+    dictWord* dictWords = malloc(MAX_DICT_WORDS * sizeof(dictWord));
+    if (dictWords == NULL) {
+        perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
     char line[MAX_WORD_LENGTH];
-    ssize_t bytesRead;
-    while ((bytesRead = read(dictionary, line, sizeof(line))) > 0 && numDictWords < MAX_DICT_WORDS) {
-        // Ensure null-termination of the string
-        line[bytesRead] = '\0';
-
-        // Split the input into lines and store each line as a word
-        char* token = strtok(line, "\n");
+    int lineNum = 1;
+    while (fgets(line, sizeof(line), file) != NULL && numDictWords < MAX_DICT_WORDS) {
+        char* token = strtok(line, " \t\n");
+        int columnNum = 1;
         while (token != NULL && numDictWords < MAX_DICT_WORDS) {
-            strncpy(dictWords[numDictWords++], token, MAX_WORD_LENGTH - 1);
-            token = strtok(NULL, "\n");
+            strncpy(dictWords[numDictWords].word, token, MAX_WORD_LENGTH - 1);
+            dictWords[numDictWords].word[MAX_WORD_LENGTH - 1] = '\0';
+            dictWords[numDictWords].line = lineNum;
+            dictWords[numDictWords].column = columnNum;
+            numDictWords++;
+            token = strtok(NULL, " \t\n");
+            columnNum++;
         }
+        lineNum++;
     }
 
-    if (bytesRead == -1) {
-        perror("Error while reading dictionary file");
-        exit(EXIT_FAILURE);
-    }
-
-    close(dictionary);
+    fclose(file);
+    return dictWords;
 }
 
 void nextFile(const char* dirname) {
@@ -69,7 +74,7 @@ void nextFile(const char* dirname) {
             strcat(path, entity->d_name);
 
             // Call the spell checker method for the current .txt file
-            spellChecker(path);
+            //spellChecker(path);
         }
 
         // Recursive call for directories
@@ -93,13 +98,16 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    readDict(argv[1]);
+    dictWord* dictWords = storeDictWords(argv[1]);
 
     printf("Words in the dictionary:\n");
-    for (int i = 0; i < MAX_DICT_WORDS && dictWords[i][0] != '\0'; i++) {
-        printf("%s\n", dictWords[i]);
+    for (int i = 0; i < numDictWords; i++) {
+        printf("Word: %s, Line: %d, Column: %d\n", dictWords[i].word, dictWords[i].line, dictWords[i].column);
     }
 
     nextFile(argv[1]);
+
+    free(dictWords);
+
     return 0;
 }
