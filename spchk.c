@@ -26,6 +26,8 @@ void listFiles(const char* dirname){ //function that lists all the files recursi
     closedir(dir);
 }
 
+void
+
 int main(int argc, char* argv[]) {
     if(argc != 2) {
         fprintf(stderr, "Usage: %s <directory>\n", argv[0]);
