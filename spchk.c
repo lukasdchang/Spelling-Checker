@@ -14,37 +14,37 @@ typedef struct {
     char word[MAX_WORD_LENGTH];
     int line;
     int column;
-} dictWord;
+} words;
 
-char dictWords[MAX_DICT_WORDS][MAX_WORD_LENGTH];
-int numDictWords = 0;
+char wordss[MAX_DICT_WORDS][MAX_WORD_LENGTH];
+int numwordss = 0;
 
 void spellChecker(const char* filename);
 
-dictWord* storeDictWords(const char* filename) {
+words* storeWords(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
     }
 
-    dictWord* dictWords = malloc(MAX_DICT_WORDS * sizeof(dictWord));
-    if (dictWords == NULL) {
+    words* wordss = malloc(MAX_DICT_WORDS * sizeof(words));
+    if (wordss == NULL) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
     char line[MAX_WORD_LENGTH];
     int lineNum = 1;
-    while (fgets(line, sizeof(line), file) != NULL && numDictWords < MAX_DICT_WORDS) {
+    while (fgets(line, sizeof(line), file) != NULL && numwordss < MAX_DICT_WORDS) {
         char* token = strtok(line, " \t\n");
         int columnNum = 1;
-        while (token != NULL && numDictWords < MAX_DICT_WORDS) {
-            strncpy(dictWords[numDictWords].word, token, MAX_WORD_LENGTH - 1);
-            dictWords[numDictWords].word[MAX_WORD_LENGTH - 1] = '\0';
-            dictWords[numDictWords].line = lineNum;
-            dictWords[numDictWords].column = columnNum;
-            numDictWords++;
+        while (token != NULL && numwordss < MAX_DICT_WORDS) {
+            strncpy(wordss[numwordss].word, token, MAX_WORD_LENGTH - 1);
+            wordss[numwordss].word[MAX_WORD_LENGTH - 1] = '\0';
+            wordss[numwordss].line = lineNum;
+            wordss[numwordss].column = columnNum;
+            numwordss++;
             token = strtok(NULL, " \t\n");
             columnNum++;
         }
@@ -52,7 +52,7 @@ dictWord* storeDictWords(const char* filename) {
     }
 
     fclose(file);
-    return dictWords;
+    return wordss;
 }
 
 void nextFile(const char* dirname) {
@@ -98,16 +98,16 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    dictWord* dictWords = storeDictWords(argv[1]);
+    words* wordss = storeWords(argv[1]);
 
     printf("Words in the dictionary:\n");
-    for (int i = 0; i < numDictWords; i++) {
-        printf("Word: %s, Line: %d, Column: %d\n", dictWords[i].word, dictWords[i].line, dictWords[i].column);
+    for (int i = 0; i < numwordss; i++) {
+        printf("Word: %s, Line: %d, Column: %d\n", wordss[i].word, wordss[i].line, wordss[i].column);
     }
 
     nextFile(argv[1]);
 
-    free(dictWords);
+    free(wordss);
 
     return 0;
 }
