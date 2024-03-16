@@ -20,6 +20,7 @@ void nextFile(const char* dirname) {
     while (entity != NULL) {
         // Check if the entity is a regular file and ends with ".txt"
         if (entity->d_type == DT_REG && strstr(entity->d_name, ".txt") != NULL) {
+            //printf("%s/%s\n", dirname, entity->d_name);
             char path[100] = { 0 };
             strcat(path, dirname);
             strcat(path, "/");
