@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 
-void listFiles(const char* dirname){ //function that lists all the files recursively given a directory name
+//Component 1
+
+void nextFile(const char* dirname){ //function that lists all the files recursively given a directory name
     DIR* dir = opendir(dirname);
     if (dir == NULL) {
         perror("opendir");
@@ -18,7 +21,7 @@ void listFiles(const char* dirname){ //function that lists all the files recursi
                 strcat(path, dirname);
                 strcat(path, "/");
                 strcat(path, entity->d_name);
-                listFiles(path);
+                nextFile(path);
             }
         }
         entity = readdir(dir);
@@ -26,13 +29,24 @@ void listFiles(const char* dirname){ //function that lists all the files recursi
     closedir(dir);
 }
 
-void
+//Component 2
+typedef struct {
+    char* word;
+    int line;
+    int column;
+} Word;
+
+
+
+//Component 3
+
+
 
 int main(int argc, char* argv[]) {
     if(argc != 2) {
-        fprintf(stderr, "Usage: %s <directory>\n", argv[0]);
-        return 1;
+        printf("Invalid number of arguments.\n");
+        return EXIT_FAILURE;
     }
-    listFiles(argv[1]);
+    nextFile(argv[1]);
     return 0;
 }
