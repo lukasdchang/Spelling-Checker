@@ -3,7 +3,7 @@
 #include <string.h>
 #include <dirent.h>
 
-//Component 1
+void spellChecker(const char* filename);
 
 void nextFile(const char* dirname) {
     DIR* dir = opendir(dirname);
@@ -17,7 +17,13 @@ void nextFile(const char* dirname) {
     while (entity != NULL) {
         // Check if the entity is a regular file and ends with ".txt"
         if (entity->d_type == DT_REG && strstr(entity->d_name, ".txt") != NULL) {
-            printf("%s/%s\n", dirname, entity->d_name);
+            char path[100] = { 0 };
+            strcat(path, dirname);
+            strcat(path, "/");
+            strcat(path, entity->d_name);
+
+            // Call the spell checker method for the current .txt file
+            spellChecker(path);
         }
 
         // Recursive call for directories
@@ -34,19 +40,6 @@ void nextFile(const char* dirname) {
 
     closedir(dir);
 }
-
-//Component 2
-typedef struct {
-    char* word;
-    int line;
-    int column;
-} Word;
-
-
-
-//Component 3
-
-
 
 int main(int argc, char* argv[]) {
     if(argc != 2) {
