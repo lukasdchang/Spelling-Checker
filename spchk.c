@@ -10,41 +10,41 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
 
-typedef struct {
+typedef struct { //word data struct used by storeWords
     char word[MAX_WORD_LENGTH];
     int line;
     int column;
 } words;
 
-char wordss[MAX_DICT_WORDS][MAX_WORD_LENGTH];
-int numwordss = 0;
+char wordArray[MAX_DICT_WORDS][MAX_WORD_LENGTH]; //word array where words from txt files are stored
+int numwordArray = 0;
 
 void spellChecker(const char* filename);
 
-words* storeWords(const char* filename) {
+words* storeWords(const char* filename) { //stores every word from a given filename into a struct with its column and line number
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
     }
 
-    words* wordss = malloc(MAX_DICT_WORDS * sizeof(words));
-    if (wordss == NULL) {
+    words* wordArray = malloc(MAX_DICT_WORDS * sizeof(words));
+    if (wordArray == NULL) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
     char line[MAX_WORD_LENGTH];
     int lineNum = 1;
-    while (fgets(line, sizeof(line), file) != NULL && numwordss < MAX_DICT_WORDS) {
+    while (fgets(line, sizeof(line), file) != NULL && numwordArray < MAX_DICT_WORDS) {
         char* token = strtok(line, " \t\n");
         int columnNum = 1;
-        while (token != NULL && numwordss < MAX_DICT_WORDS) {
-            strncpy(wordss[numwordss].word, token, MAX_WORD_LENGTH - 1);
-            wordss[numwordss].word[MAX_WORD_LENGTH - 1] = '\0';
-            wordss[numwordss].line = lineNum;
-            wordss[numwordss].column = columnNum;
-            numwordss++;
+        while (token != NULL && numwordArray < MAX_DICT_WORDS) {
+            strncpy(wordArray[numwordArray].word, token, MAX_WORD_LENGTH - 1);
+            wordArray[numwordArray].word[MAX_WORD_LENGTH - 1] = '\0';
+            wordArray[numwordArray].line = lineNum;
+            wordArray[numwordArray].column = columnNum;
+            numwordArray++;
             token = strtok(NULL, " \t\n");
             columnNum++;
         }
@@ -52,7 +52,7 @@ words* storeWords(const char* filename) {
     }
 
     fclose(file);
-    return wordss;
+    return wordArray;
 }
 
 void nextFile(const char* dirname) {
@@ -98,16 +98,16 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    words* wordss = storeWords(argv[1]);
+    words* wordArray = storeWords(argv[1]);
 
     printf("Words in the dictionary:\n");
-    for (int i = 0; i < numwordss; i++) {
-        printf("Word: %s, Line: %d, Column: %d\n", wordss[i].word, wordss[i].line, wordss[i].column);
+    for (int i = 0; i < numwordArray; i++) {
+        printf("Word: %s, Line: %d, Column: %d\n", wordArray[i].word, wordArray[i].line, wordArray[i].column);
     }
 
     nextFile(argv[1]);
 
-    free(wordss);
+    free(wordArray);
 
     return 0;
 }
