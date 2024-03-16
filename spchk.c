@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
         printf("Invalid number of arguments.\n");
         return EXIT_FAILURE;
     }
+
+    
+
     nextFile(argv[1]);
     return 0;
 }
