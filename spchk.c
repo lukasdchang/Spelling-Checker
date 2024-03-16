@@ -3,7 +3,10 @@
 #include <string.h>
 #include <dirent.h>
 
-void spellChecker(const char* filename);
+void spellChecker(const char* filename) {
+
+
+}
 
 void nextFile(const char* dirname) {
     DIR* dir = opendir(dirname);
