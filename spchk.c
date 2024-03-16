@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
@@ -12,11 +13,13 @@
 char dictWords[MAX_DICT_WORDS][MAX_WORD_LENGTH];
 int numDictWords = 0;
 
-void spellChecker(const char* filename) {
+typedef struct{
+    int word;
+    int line;
+    int column;
+} dictWord;
 
-
-}
-
+void spellChecker(const char* filename);
 
 void readDict(const char* filename) {
     int dictionary = open(filename, O_RDONLY);
@@ -85,13 +88,18 @@ void nextFile(const char* dirname) {
 }
 
 int main(int argc, char* argv[]) {
-    if(argc != 2) {
+    if(argc < 2) {
         printf("Invalid number of arguments.\n");
         return EXIT_FAILURE;
     }
 
+    readDict(argv[1]);
 
-    readDictionary(argv[1]);
+    printf("Words in the dictionary:\n");
+    for (int i = 0; i < MAX_DICT_WORDS && dictWords[i][0] != '\0'; i++) {
+        printf("%s\n", dictWords[i]);
+    }
+
     nextFile(argv[1]);
     return 0;
 }
