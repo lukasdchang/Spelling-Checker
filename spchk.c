@@ -2,10 +2,49 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define MAX_WORD_LENGTH 100
+#define MAX_DICT_WORDS 200000
+
+char dictWords[MAX_DICT_WORDS][MAX_WORD_LENGTH];
+int numDictWords = 0;
 
 void spellChecker(const char* filename) {
 
 
+}
+
+
+void readDict(const char* filename) {
+    int dictionary = open(filename, O_RDONLY);
+    if (dictionary == -1) {
+        perror("Failed to open dictionary file");
+        exit(EXIT_FAILURE);
+    }
+
+    char line[MAX_WORD_LENGTH];
+    ssize_t bytesRead;
+    while ((bytesRead = read(dictionary, line, sizeof(line))) > 0 && numDictWords < MAX_DICT_WORDS) {
+        // Ensure null-termination of the string
+        line[bytesRead] = '\0';
+
+        // Split the input into lines and store each line as a word
+        char* token = strtok(line, "\n");
+        while (token != NULL && numDictWords < MAX_DICT_WORDS) {
+            strncpy(dictWords[numDictWords++], token, MAX_WORD_LENGTH - 1);
+            token = strtok(NULL, "\n");
+        }
+    }
+
+    if (bytesRead == -1) {
+        perror("Error while reading dictionary file");
+        exit(EXIT_FAILURE);
+    }
+
+    close(dictionary);
 }
 
 void nextFile(const char* dirname) {
@@ -51,8 +90,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    
 
+    readDictionary(argv[1]);
     nextFile(argv[1]);
     return 0;
 }
