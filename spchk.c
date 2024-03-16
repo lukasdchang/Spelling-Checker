@@ -11,19 +11,19 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
 
-typedef struct {
+typedef struct { // struct to store information about each word. Used by storeWords
     char word[MAX_WORD_LENGTH];
-    char file_directory[PATH_MAX]; // Store the file directory
+    char file_directory[PATH_MAX]; 
     int line;
     int column;
 } words;
 
-words wordArray[MAX_DICT_WORDS];
+words wordArray[MAX_DICT_WORDS]; // array of every word the program finds
 int numWordArray = 0;
 
 void spellChecker(const char* filename);
 
-void storeWords(const char* filename) {
+void storeWords(const char* filename) { //stores every single word from the given filename into an array
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Failed to open file");
@@ -37,7 +37,7 @@ void storeWords(const char* filename) {
         int columnNum = 1;
         while (token != NULL && numWordArray < MAX_DICT_WORDS) {
             strcpy(wordArray[numWordArray].word, token);
-            strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX); // Store the file directory
+            strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX); 
             wordArray[numWordArray].line = lineNum;
             wordArray[numWordArray].column = columnNum;
             numWordArray++;
@@ -50,7 +50,7 @@ void storeWords(const char* filename) {
     fclose(file);
 }
 
-void nextFile(const char* dirname) {
+void nextFile(const char* dirname) { //recursively searches through the given directory name
     DIR* dir = opendir(dirname);
     if (dir == NULL) {
         perror("opendir");
@@ -64,14 +64,16 @@ void nextFile(const char* dirname) {
         if (entity->d_type == DT_REG && strstr(entity->d_name, ".txt") != NULL) {
             char path[PATH_MAX];
             snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
-            storeWords(path);
+
+            storeWords(path); //stores all the words along with its info within the current txt file into an array
         }
 
         // Recursive call for directories
         if (entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
             char path[PATH_MAX];
             snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
-            nextFile(path);
+
+            nextFile(path); //finds the next txt file within the directory
         }
 
         entity = readdir(dir);
@@ -87,8 +89,14 @@ int main(int argc, char* argv[]) {
     }
 
     nextFile(argv[2]);
+    //spellChecker(wordArray); 
+    // ^ here we want to be able to call a method called spellChecker which will iterate through the wordArray and binary search through a given dictionary
+    //      to see if each word is in the dictionary. If its not, it will print it out along with its information.
 
-    // Print all words stored from the text files with line, column, and file directory information
+
+
+    // Print all words stored from the text files formatted like this -> Word: , File Directory:  (Line, Column)
+    // This is only here to test if the nextFile and storeWords works
     for (int i = 0; i < numWordArray; i++) {
         printf("Word: %s, File Directory: %s (%d,%d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
     }
