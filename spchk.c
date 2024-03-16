@@ -6,45 +6,41 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
 
-typedef struct { //word data struct used by storeWords
+typedef struct {
     char word[MAX_WORD_LENGTH];
+    char file_directory[PATH_MAX]; // Store the file directory
     int line;
     int column;
 } words;
 
-char wordArray[MAX_DICT_WORDS][MAX_WORD_LENGTH]; //word array where words from txt files are stored
-int numwordArray = 0;
+words wordArray[MAX_DICT_WORDS];
+int numWordArray = 0;
 
 void spellChecker(const char* filename);
 
-words* storeWords(const char* filename) { //stores every word from a given filename into a struct with its column and line number
+void storeWords(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
     }
 
-    words* wordArray = malloc(MAX_DICT_WORDS * sizeof(words));
-    if (wordArray == NULL) {
-        perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
-    }
-
     char line[MAX_WORD_LENGTH];
     int lineNum = 1;
-    while (fgets(line, sizeof(line), file) != NULL && numwordArray < MAX_DICT_WORDS) {
+    while (fgets(line, sizeof(line), file) != NULL && numWordArray < MAX_DICT_WORDS) {
         char* token = strtok(line, " \t\n");
         int columnNum = 1;
-        while (token != NULL && numwordArray < MAX_DICT_WORDS) {
-            strncpy(wordArray[numwordArray].word, token, MAX_WORD_LENGTH - 1);
-            wordArray[numwordArray].word[MAX_WORD_LENGTH - 1] = '\0';
-            wordArray[numwordArray].line = lineNum;
-            wordArray[numwordArray].column = columnNum;
-            numwordArray++;
+        while (token != NULL && numWordArray < MAX_DICT_WORDS) {
+            strcpy(wordArray[numWordArray].word, token);
+            strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX); // Store the file directory
+            wordArray[numWordArray].line = lineNum;
+            wordArray[numWordArray].column = columnNum;
+            numWordArray++;
             token = strtok(NULL, " \t\n");
             columnNum++;
         }
@@ -52,7 +48,6 @@ words* storeWords(const char* filename) { //stores every word from a given filen
     }
 
     fclose(file);
-    return wordArray;
 }
 
 void nextFile(const char* dirname) {
@@ -67,22 +62,15 @@ void nextFile(const char* dirname) {
     while (entity != NULL) {
         // Check if the entity is a regular file and ends with ".txt"
         if (entity->d_type == DT_REG && strstr(entity->d_name, ".txt") != NULL) {
-            //printf("%s/%s\n", dirname, entity->d_name);
-            char path[100] = { 0 };
-            strcat(path, dirname);
-            strcat(path, "/");
-            strcat(path, entity->d_name);
-
-            // Call the spell checker method for the current .txt file
-            //spellChecker(path);
+            char path[PATH_MAX];
+            snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
+            storeWords(path);
         }
 
         // Recursive call for directories
         if (entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
-            char path[100] = { 0 };
-            strcat(path, dirname);
-            strcat(path, "/");
-            strcat(path, entity->d_name);
+            char path[PATH_MAX];
+            snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
             nextFile(path);
         }
 
@@ -93,21 +81,17 @@ void nextFile(const char* dirname) {
 }
 
 int main(int argc, char* argv[]) {
-    if(argc < 2) {
+    if (argc < 2) {
         printf("Invalid number of arguments.\n");
         return EXIT_FAILURE;
     }
 
-    words* wordArray = storeWords(argv[1]);
+    nextFile(argv[2]);
 
-    printf("Words in the dictionary:\n");
-    for (int i = 0; i < numwordArray; i++) {
-        printf("Word: %s, Line: %d, Column: %d\n", wordArray[i].word, wordArray[i].line, wordArray[i].column);
+    // Print all words stored from the text files with line, column, and file directory information
+    for (int i = 0; i < numWordArray; i++) {
+        printf("Word: %s, File Directory: %s (%d,%d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
     }
 
-    nextFile(argv[1]);
-
-    free(wordArray);
-
-    return 0;
+    return EXIT_SUCCESS;
 }
