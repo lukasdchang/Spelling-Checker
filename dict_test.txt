@@ -1,5 +1,5 @@
 computer
-hey 
+hey
 i
 science
 elephant
@@ -7,9 +7,9 @@ in
 adventure
 whisper
 enchantment
-am 
+am
 majestic
-majestically
+majestically 
 majesties
 majesty
 majesty's
