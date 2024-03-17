@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <ctype.h>
 
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
@@ -26,42 +27,27 @@ int numDictionaryWords = 0;
 
 // Function to read the dictionary file and store words in an array
 void readDictionary(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
+    int file = open(filename, O_RDONLY);
+    if (file == -1) {
         perror("Failed to open dictionary file");
         exit(EXIT_FAILURE);
     }
 
     char word[MAX_WORD_LENGTH];
-    while (fgets(word, sizeof(word), file) != NULL && numDictionaryWords < MAX_DICT_WORDS) {
+    ssize_t bytes_read;
+    while ((bytes_read = read(file, word, sizeof(word))) > 0 && numDictionaryWords < MAX_DICT_WORDS) {
         // Remove newline character from the end of the word
         word[strcspn(word, "\n")] = '\0';
         strcpy(dictionary[numDictionaryWords], word);
         numDictionaryWords++;
     }
 
-    fclose(file);
+    close(file);
 }
 
 // Function to perform binary search to check if a word exists in the dictionary
 int binarySearch(const char* word) {
-    int left = 0;
-    int right = numDictionaryWords - 1;
-
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        int cmp = strcmp(dictionary[mid], word);
-
-        if (cmp == 0) {
-            return mid; // Word found
-        } else if (cmp < 0) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-
-    return -1; // Word not found
+    // Implement binary search logic here
 }
 
 // Function to check spelling of words in wordArray against the dictionary
@@ -76,15 +62,16 @@ void spellChecker() {
 
 // Function to store words from a file into wordArray
 void storeWords(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
+    int file = open(filename, O_RDONLY);
+    if (file == -1) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
     }
 
     char line[MAX_WORD_LENGTH];
     int lineNum = 1;
-    while (fgets(line, sizeof(line), file) != NULL && numWordArray < MAX_DICT_WORDS) {
+    ssize_t bytes_read;
+    while ((bytes_read = read(file, line, sizeof(line))) > 0 && numWordArray < MAX_DICT_WORDS) {
         char* token = strtok(line, " \t\n");
         int columnNum = 1;
         while (token != NULL && numWordArray < MAX_DICT_WORDS) {
@@ -99,7 +86,7 @@ void storeWords(const char* filename) {
         lineNum++;
     }
 
-    fclose(file);
+    close(file);
 }
 
 // Function to recursively search through a directory and process text files
@@ -143,6 +130,11 @@ int main(int argc, char* argv[]) {
 
     readDictionary(argv[1]); // Read the dictionary file specified in the first argument
     nextFile(argv[2]); // Process text files specified in the second argument
+
+    // Print all words stored from the text files with line, column, and file directory information
+    for(int i = 0; i < numWordArray; i++) {
+        printf("Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
+    }
 
     spellChecker(); // Check spelling against the dictionary
 
