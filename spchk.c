@@ -21,9 +21,61 @@ typedef struct { // struct to store information about each word. Used by storeWo
 words wordArray[MAX_DICT_WORDS]; // array of every word the program finds
 int numWordArray = 0;
 
-void spellChecker(const char* filename);
+char dictionary[MAX_DICT_WORDS][MAX_WORD_LENGTH]; // Array to store dictionary words
+int numDictionaryWords = 0;
 
-void storeWords(const char* filename) { //stores every single word from the given filename into an array
+// Function to read the dictionary file and store words in an array
+void readDictionary(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Failed to open dictionary file");
+        exit(EXIT_FAILURE);
+    }
+
+    char word[MAX_WORD_LENGTH];
+    while (fgets(word, sizeof(word), file) != NULL && numDictionaryWords < MAX_DICT_WORDS) {
+        // Remove newline character from the end of the word
+        word[strcspn(word, "\n")] = '\0';
+        strcpy(dictionary[numDictionaryWords], word);
+        numDictionaryWords++;
+    }
+
+    fclose(file);
+}
+
+// Function to perform binary search to check if a word exists in the dictionary
+int binarySearch(const char* word) {
+    int left = 0;
+    int right = numDictionaryWords - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        int cmp = strcmp(dictionary[mid], word);
+
+        if (cmp == 0) {
+            return mid; // Word found
+        } else if (cmp < 0) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    return -1; // Word not found
+}
+
+// Function to check spelling of words in wordArray against the dictionary
+void spellChecker() {
+    for (int i = 0; i < numWordArray; i++) {
+        int index = binarySearch(wordArray[i].word);
+        if (index == -1) {
+            printf("%s (%s:%d,%d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
+        }
+    }
+}
+
+// Function to store words from a file into wordArray
+void storeWords(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Failed to open file");
@@ -50,7 +102,8 @@ void storeWords(const char* filename) { //stores every single word from the give
     fclose(file);
 }
 
-void nextFile(const char* dirname) { //recursively searches through the given directory name
+// Function to recursively search through a directory and process text files
+void nextFile(const char* dirname) {
     DIR* dir = opendir(dirname);
     if (dir == NULL) {
         perror("opendir");
@@ -83,23 +136,15 @@ void nextFile(const char* dirname) { //recursively searches through the given di
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
+    if (argc < 3) {
         printf("Invalid number of arguments.\n");
         return EXIT_FAILURE;
     }
 
-    nextFile(argv[2]);
-    //spellChecker(wordArray); 
-    // ^ here we want to be able to call a method called spellChecker which will iterate through the wordArray and binary search through a given dictionary
-    //      to see if each word is in the dictionary. If its not, it will print it out along with its information.
+    readDictionary(argv[1]); // Read the dictionary file specified in the first argument
+    nextFile(argv[2]); // Process text files specified in the second argument
 
-
-
-    // Print all words stored from the text files formatted like this -> Word: , File Directory:  (Line, Column)
-    // This is only here to test if the nextFile and storeWords works
-    for (int i = 0; i < numWordArray; i++) {
-        printf("Word: %s, File Directory: %s (%d,%d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
-    }
+    spellChecker(); // Check spelling against the dictionary
 
     return EXIT_SUCCESS;
 }
