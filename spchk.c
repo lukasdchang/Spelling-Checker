@@ -66,7 +66,6 @@ void readDictionary(const char* filename) {
     close(file);
 }
 
-// Function to store words from a file into wordArray
 void readTxt(const char* filename) {
     int file = open(filename, O_RDONLY);
     if (file == -1) {
@@ -76,40 +75,40 @@ void readTxt(const char* filename) {
 
     char buffer[MAX_WORD_LENGTH];
     ssize_t bytes_read;
-    ssize_t buffer_length = 0;
     int lineNum = 1;
     int columnNum = 1;
-    while ((bytes_read = read(file, buffer + buffer_length, sizeof(buffer) - buffer_length)) > 0 && numWordArray < MAX_DICT_WORDS) {
-        buffer_length += bytes_read;
-        char* start = buffer;
-        char* end;
-        while ((end = memchr(start, ' ', buffer_length - (start - buffer))) != NULL) {
+    int wordStartIndex = 0; // Index to start recording a new word
+    while ((bytes_read = read(file, buffer, sizeof(buffer))) > 0 && numWordArray < MAX_DICT_WORDS) {
+        for (ssize_t i = 0; i < bytes_read && numWordArray < MAX_DICT_WORDS; i++) {
+            char currentChar = buffer[i];
             // Check for word boundaries
-            if (start != end) {
-                // Copy the word to the wordArray
-                int length = end - start;
-                if (length >= MAX_WORD_LENGTH) {
-                    length = MAX_WORD_LENGTH - 1;
+            if ((!isalnum(currentChar) && currentChar != '\'' && currentChar != '-') || isdigit(currentChar)) {
+                // Non-alphanumeric character or digit indicates end of word
+                // New word found, start recording
+                if (i > wordStartIndex) { // Avoid recording empty words
+                    // Copy the word to the wordArray
+                    int length = i - wordStartIndex;
+                    if (length >= MAX_WORD_LENGTH) {
+                        length = MAX_WORD_LENGTH - 1;
+                    }
+                    strncpy(wordArray[numWordArray].word, buffer + wordStartIndex, length);
+                    wordArray[numWordArray].word[length] = '\0';
+                    strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX);
+                    wordArray[numWordArray].line = lineNum;
+                    wordArray[numWordArray].column = columnNum - (i - wordStartIndex); // Adjust column number
+                    numWordArray++;
                 }
-                strncpy(wordArray[numWordArray].word, start, length);
-                wordArray[numWordArray].word[length] = '\0';
-                strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX);
-                wordArray[numWordArray].line = lineNum;
-                wordArray[numWordArray].column = columnNum;
-                numWordArray++;
+                // Reset word start index
+                wordStartIndex = i + 1;
             }
-            // Move to the next word
-            start = end + 1;
-            // Increment column number
-            columnNum++;
+            // Keep track of line and column numbers
+            if (currentChar == '\n') {
+                lineNum++;
+                columnNum = 1;
+            } else {
+                columnNum++;
+            }
         }
-        // Move the remaining part of the buffer to the beginning
-        buffer_length -= (start - buffer);
-        memmove(buffer, start, buffer_length);
-        // Increment line number
-        lineNum++;
-        // Reset column number for the new line
-        columnNum = 1;
     }
 
     if (bytes_read == -1) {
@@ -119,6 +118,8 @@ void readTxt(const char* filename) {
 
     close(file);
 }
+
+
 
 // Function to perform binary search to check if a word exists in the dictionary
 int binarySearch(const char* word) {
