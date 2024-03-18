@@ -12,46 +12,62 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_DICT_WORDS 200000
 
-typedef struct { // struct to store information about each word. Used by readTxt
+typedef struct { // struct to store information about each word, used by readTextFile
     char word[MAX_WORD_LENGTH];
     char file_directory[PATH_MAX]; 
     int line;
     int column;
 } words;
 
-words wordArray[MAX_DICT_WORDS]; // array of every word the program finds
-int numWordArray = 0;
+words wordArray[MAX_DICT_WORDS]; // array of every word the program finds from text files
+int wordArrayLength = 0;
 
-char dictionary[MAX_DICT_WORDS][MAX_WORD_LENGTH]; // Array to store dictionary words
-int numDictionaryWords = 0;
+char dictArray[MAX_DICT_WORDS][MAX_WORD_LENGTH]; // array of every word in the dictionary file
+int dictArrayLength = 0;
 
-void toLowerCase(char *word) {
-    for (int i = 0; word[i]; i++) {
-        word[i] = tolower(word[i]);
-    }
-}
-
-int compareWords(const void *a, const void *b) {
+// function that compares two words to see if they match. If they match return a 0, if the compared is lower lexicographically return a negative
+//  if the compared is higher lexicographically return a positive. includes a capitalization checker. used by bsearch() in spellChecker()
+int compareWords(const void *a, const void *b) { 
     const char *str1 = (const char*)a;
     const char *str2 = (const char*)b;
 
-    //printf("Comparing \"%s\" with \"%s\"\n", str1, str2);
-
-    char lowerStr1[MAX_WORD_LENGTH], lowerStr2[MAX_WORD_LENGTH];
-    strcpy(lowerStr1, str1);
-    strcpy(lowerStr2, str2);
-    toLowerCase(lowerStr1);
-    toLowerCase(lowerStr2);
-
-    //printf("%d\n", strcmp(lowerStr1, lowerStr2));
-    return strcmp(lowerStr1, lowerStr2);
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
+    if (len1 > 0 && len2 > 0) {
+        if (isupper(str2[0])) { // If dictArray word starts with uppercase
+            if (strcmp(str1, str2) == 0) { // Exact match
+                return 0; 
+            }
+            // Convert to uppercase for comparison
+            char upperStr1[MAX_WORD_LENGTH];
+            for (int i = 0; i <= len1; i++) {
+                upperStr1[i] = toupper(str1[i]);
+            }
+            if (strcmp(upperStr1, str2) == 0) { // All uppercase match
+                return 0;
+            } 
+        } else if (islower(str2[0])) { // If dictArray word starts with lowercase
+            // Allow regular and initial capital variations
+            if (strcasecmp(str1, str2) == 0) { // Case-insensitive match
+                return 0;
+            } 
+            char initCapStr1[MAX_WORD_LENGTH];
+            strcpy(initCapStr1, str1);
+            initCapStr1[0] = toupper(initCapStr1[0]);
+            if (strcmp(initCapStr1, str2) == 0) {  // Initial capital match
+                return 0;
+            }
+        }
+    }
+    // Fallback to case-insensitive comparison if none of the above conditions met
+    return strcasecmp(str1, str2);
 }
 
-// Function to read the dictionary file and store words in an array
-void readDictionary(const char* filename) {
+// function to read the dictArray file and store words in an array
+void readDictionaryFile(const char* filename) {
     int file = open(filename, O_RDONLY);
     if (file == -1) {
-        perror("Failed to open dictionary file");
+        perror("Failed to open dictArray file");
         exit(EXIT_FAILURE);
     }
 
@@ -60,71 +76,82 @@ void readDictionary(const char* filename) {
     ssize_t bytes_read;
     ssize_t line_length = 0;
     ssize_t buffer_length = 0;
-    while ((bytes_read = read(file, buffer + buffer_length, sizeof(buffer) - buffer_length)) > 0 && numDictionaryWords < MAX_DICT_WORDS) {
+
+    //read the file content into the buffer in chunks
+    while ((bytes_read = read(file, buffer + buffer_length, sizeof(buffer) - buffer_length)) > 0 && dictArrayLength < MAX_DICT_WORDS) {
         buffer_length += bytes_read;
         char* start = buffer;
         char* end;
+
+        // process each line in the buffer
         while ((end = memchr(start, '\n', buffer_length - (start - buffer))) != NULL) {
             line_length = end - start;
             strncpy(line, start, line_length);
             line[line_length] = '\0';
             start = end + 1;
-            char* token = strtok(line, " \t\n");
-            while (token != NULL && numDictionaryWords < MAX_DICT_WORDS) {
-                strcpy(dictionary[numDictionaryWords], token);
-                numDictionaryWords++;
+            char* token = strtok(line, " \t\n"); // break up text file into smaller strings separated by whitespaces using a tokenizer
+            while (token != NULL && dictArrayLength < MAX_DICT_WORDS) { 
+                strcpy(dictArray[dictArrayLength], token); // copy the tokenized word into dictArray
+                dictArrayLength++;
                 token = strtok(NULL, " \t\n");
             }
         }
-        buffer_length -= (start - buffer);
-        memmove(buffer, start, buffer_length);
+        buffer_length -= (start - buffer); // updates buffer length
+        memmove(buffer, start, buffer_length); // move remaining content to buffer to the beginning
     }
 
     if (bytes_read == -1) {
-        perror("Failed to read from dictionary file");
+        perror("Failed to read from dictArray file");
         exit(EXIT_FAILURE);
     }
 
     close(file);
-    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords); 
+
+    // sorts the dictionary array alphabetically
+    qsort(dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords); 
 }
 
-void readTxt(const char* filename) {
+void readTextFile(const char* filename) {
     int file = open(filename, O_RDONLY);
     if (file == -1) {
         perror("Failed to open file");
         exit(EXIT_FAILURE);
     }
 
+    //variables to store word data
     char buffer[MAX_WORD_LENGTH];
     ssize_t bytes_read;
     int lineNum = 1;
     int columnNum = 1;
-    int wordStartIndex = 0; // Index to start recording a new word
-    while ((bytes_read = read(file, buffer, sizeof(buffer))) > 0 && numWordArray < MAX_DICT_WORDS) {
-        for (ssize_t i = 0; i < bytes_read && numWordArray < MAX_DICT_WORDS; i++) {
+    int wordStartIndex = 0;
+
+    // read file content into buffer in chunks
+    while ((bytes_read = read(file, buffer, sizeof(buffer))) > 0 && wordArrayLength < MAX_DICT_WORDS) {
+        for (ssize_t i = 0; i < bytes_read && wordArrayLength < MAX_DICT_WORDS; i++) {
             char currentChar = buffer[i];
-            // Check for word boundaries
+
+            // check for word boundaries
             if ((!isalnum(currentChar) && currentChar != '\'' && currentChar != '-') || isdigit(currentChar)) {
-                // Non-alphanumeric character or digit indicates end of word
-                // New word found, start recording
-                if (i > wordStartIndex) { // Avoid recording empty words
-                    // Copy the word to the wordArray
+                if (i > wordStartIndex) { 
                     int length = i - wordStartIndex;
                     if (length >= MAX_WORD_LENGTH) {
                         length = MAX_WORD_LENGTH - 1;
                     }
-                    strncpy(wordArray[numWordArray].word, buffer + wordStartIndex, length);
-                    wordArray[numWordArray].word[length] = '\0';
-                    strncpy(wordArray[numWordArray].file_directory, filename, PATH_MAX);
-                    wordArray[numWordArray].line = lineNum;
-                    wordArray[numWordArray].column = columnNum - (i - wordStartIndex); // Adjust column number
-                    numWordArray++;
+
+                    // copy the word into wordArray
+                    strncpy(wordArray[wordArrayLength].word, buffer + wordStartIndex, length);
+                    wordArray[wordArrayLength].word[length] = '\0'; // null terminate word
+
+                    // store word data
+                    strncpy(wordArray[wordArrayLength].file_directory, filename, PATH_MAX); // file directory
+                    wordArray[wordArrayLength].line = lineNum; // line number
+                    wordArray[wordArrayLength].column = columnNum - (i - wordStartIndex); // column number
+
+                    wordArrayLength++;
                 }
-                // Reset word start index
-                wordStartIndex = i + 1;
+                wordStartIndex = i + 1; // next word
             }
-            // Keep track of line and column numbers
+            // update line and column numbers
             if (currentChar == '\n') {
                 lineNum++;
                 columnNum = 1;
@@ -142,20 +169,8 @@ void readTxt(const char* filename) {
     close(file);
 }
 
-void printDictionary() { // testing purposes
-    printf("Words in the dictionary:\n");
-    for (int i = 0; i < numDictionaryWords; i++) {
-        printf("%s\n", dictionary[i]);
-    }
-}
 
-void printWords() {
-    for(int i = 0; i < numWordArray; i++) {
-        printf("Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
-    }
-}
-
-// Function to recursively search through a directory and process text files
+// function to recursively search through a directory and process text files given a directory name
 void nextFile(const char* dirname) {
     DIR* dir = opendir(dirname);
     if (dir == NULL) {
@@ -166,20 +181,20 @@ void nextFile(const char* dirname) {
     struct dirent* entity;
     entity = readdir(dir);
     while (entity != NULL) {
-        // Check if the entity is a regular file and ends with ".txt"
+        // check if the entity is a regular file and ends with ".txt"
         if (entity->d_type == DT_REG && strstr(entity->d_name, ".txt") != NULL) {
             char path[PATH_MAX];
             snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
 
-            readTxt(path); //stores all the words along with its info within the current txt file into an array
+            readTextFile(path); // stores all the words along with its info within the current txt file into an array
         }
 
-        // Recursive call for directories
+        // recursive call for directories
         if (entity->d_type == DT_DIR && strcmp(entity->d_name, ".") != 0 && strcmp(entity->d_name, "..") != 0) {
             char path[PATH_MAX];
             snprintf(path, PATH_MAX, "%s/%s", dirname, entity->d_name);
 
-            nextFile(path); //finds the next txt file within the directory
+            nextFile(path); // finds the next txt file within the directory
         }
 
         entity = readdir(dir);
@@ -188,16 +203,29 @@ void nextFile(const char* dirname) {
     closedir(dir);
 }
 
-
-
-void checkSpelling() {
-    for (int i = 0; i < numWordArray; i++) {
-        if (bsearch(wordArray[i].word, dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords) == NULL) {
-            printf("Misspelled Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
+void checkSpelling() { // uses binary search (bsearch()) to check whether words in the wordArray exist in the dictArray
+    for (int i = 0; i < wordArrayLength; i++) {
+        if (bsearch(wordArray[i].word, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
+            // prints words formatted: file directory (line, column): word 
+            printf("%s (%d, %d): %s\n", wordArray[i].file_directory, wordArray[i].line, wordArray[i].column, wordArray[i].word);
         }
     }
 }
 
+// prints out dictArray (testing purposes)
+void printDictArray() { 
+    printf("Words in the dictArray:\n");
+    for (int i = 0; i < dictArrayLength; i++) {
+        printf("%s\n", dictArray[i]);
+    }
+}
+
+// prints out wordArray (testing purposes)
+void printWordArray() { 
+    for(int i = 0; i < wordArrayLength; i++) {
+        printf("Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
+    }
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -205,13 +233,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    readDictionary(argv[1]); // Read the dictionary file specified in the first argument
+    readDictionaryFile(argv[1]); // Read the dictArray file specified in the first argument
     nextFile(argv[2]); // Process text files specified in the second argument
 
-    //printDictionary();
-    //printWords();
+    //printDictArray();
+    //printWordArrays();
 
-    checkSpelling();
+    checkSpelling(); 
 
     return EXIT_SUCCESS;
 }

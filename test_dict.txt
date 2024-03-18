@@ -1,5 +1,0 @@
-bird
-swan
-apple
-yellow
-green

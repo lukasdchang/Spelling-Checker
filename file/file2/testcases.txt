@@ -21,3 +21,5 @@ Misspelled: foobar
 Combinations: abc aBc ABc ABC 
 Correct: aBc ABc ABC
 Misspelled: abc
+
+these words should be considered misspelt

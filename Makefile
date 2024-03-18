@@ -1,15 +1,28 @@
-CC = gcc
-CFLAGS = -I.
-DEPS =  # Add your header files here if needed
-OBJ = spchk.o
+CC=gcc
 
-all: spchk
+CFLAGS=
 
-spchk: $(OBJ)
-    $(CC) -o $@ $^ $(CFLAGS)
+TARGET=spchk
 
-spchk.o: spchk.c $(DEPS)
-    $(CC) -c -o $@ $< $(CFLAGS)
+SRC=spchk.c
+
+OBJ=$(SRC:.c=.o)
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ)
+	$(CC) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+test:
+	./$(TARGET) testdict.txt file
+
+run:
+	./$(TARGET) $(filter-out $@,$(MAKECMDGOALS))
 
 clean:
-    rm -f *.o spchk
+	rm -f $(TARGET) $(OBJ)
+
+.PHONY: all clean run
