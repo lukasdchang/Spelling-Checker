@@ -209,15 +209,12 @@ int main(int argc, char* argv[]) {
     }
 
     readDictionary(argv[1]); // Read the dictionary file specified in the first argument
-
-
     nextFile(argv[2]); // Process text files specified in the second argument
 
     //printDictionary();
     //printWords();
 
     checkSpelling();
-
 
     return EXIT_SUCCESS;
 }
