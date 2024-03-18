@@ -23,3 +23,6 @@ Correct: aBc ABc ABC
 Misspelled: abc
 
 these words should be considered misspelt
+
+well-kept
+high-quality 
