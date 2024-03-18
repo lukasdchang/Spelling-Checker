@@ -25,7 +25,7 @@ Commands
 
 
 Current state of code:
-    Program works great. Passes cases where words are spelt in correctly as in they do not match with characters every time. Does not pass the 
+    Program works great. Passes cases where words that are spelt incorrectly as in they do not match with characters every time. Does not pass the 
     capitalization cases though. I made a few test cases in the /file/file2/testcases.txt. The desired results should be self explanatory, anything
     after the "misspelled:" should be considered misspelled. Yousef try to figure out the capitalization issue, I tried fixing it in the compareWords() function
     but it didnt work.
