@@ -1,0 +1,17 @@
+Combinations: apple Apple APPLE ApPle
+Correct: all
+
+Combinations: rutgers Rutgers RUTGERS ruTgers 
+Correct: Rutger RUTGERS 
+
+Combinations: nsa NSA NSa 
+Correct: NSA
+
+Combinations: macdonald MacDonald MACDONALD maCdonAld
+Correct: MacDonald MACDONALD
+
+Combinations: foobar fooBar FooBar FOOBAR
+Correct: fooBar FooBar FOOBAR
+
+Combinations: abc aBc ABc ABC 
+Correct: aBc ABc ABC

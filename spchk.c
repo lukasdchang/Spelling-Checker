@@ -38,14 +38,17 @@ int compareWords(const void *a, const void *b) {
     //printf("Comparing \"%s\" with \"%s\"\n", str1, str2);
 
     // Compare directly if exactly the same (covers all caps and exact match)
-    if (strcmp(str1, str2) == 0) return 0;
+    if (strcmp(str1, str2) == 0){
+        return 0;
+    }
     // Convert to lowercase and compare (covers initial cap and all lowercase)
     char lowerStr1[MAX_WORD_LENGTH], lowerStr2[MAX_WORD_LENGTH];
     strcpy(lowerStr1, str1);
     strcpy(lowerStr2, str2);
     toLowerCase(lowerStr1);
     toLowerCase(lowerStr2);
-    
+
+    //printf("%d\n", strcmp(lowerStr1, lowerStr2));
     return strcmp(lowerStr1, lowerStr2);
 }
 
@@ -88,7 +91,7 @@ void readDictionary(const char* filename) {
     }
 
     close(file);
-    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords); 
+    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, (const void *)strcmp); 
 }
 
 void readTxt(const char* filename) {
@@ -194,8 +197,7 @@ void nextFile(const char* dirname) {
 
 void checkSpelling() {
     for (int i = 0; i < numWordArray; i++) {
-        //printf("%zu \n", strlen(wordArray[i].word));
-        if (!bsearch(wordArray[i].word, dictionary, strlen(wordArray[i].word), MAX_WORD_LENGTH, compareWords)) {
+        if (bsearch(wordArray[i].word, dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords) == NULL) {
             printf("Misspelled Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
         }
     }

@@ -1,2 +1,0 @@
-Hello, world! I'm happy programming.
-Spelling checker is fun!
