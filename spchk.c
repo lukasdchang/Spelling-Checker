@@ -30,37 +30,59 @@ int dictArrayLength = 0;
 int compareWords(const void *a, const void *b) { 
     const char *str1 = (const char*)a;
     const char *str2 = (const char*)b;
+    char str1Lower[MAX_WORD_LENGTH];
+    char str2Lower[MAX_WORD_LENGTH];
+    char str2Variations[3][MAX_WORD_LENGTH]; // To store acceptable variations of str2
+    int variationCount = 0;
 
-    int len1 = strlen(str1);
-    int len2 = strlen(str2);
-    if (len1 > 0 && len2 > 0) {
-        if (isupper(str2[0])) { // If dictArray word starts with uppercase
-            if (strcmp(str1, str2) == 0) { // Exact match
-                return 0; 
+    // Convert str1 and str2 to lowercase
+    for (int i = 0; str1[i]; i++) {
+        str1Lower[i] = tolower(str1[i]);
+        str1Lower[i+1] = '\0'; // Ensure null-termination
+    }
+    for (int i = 0; str2[i]; i++) {
+        str2Lower[i] = tolower(str2[i]);
+        str2Lower[i+1] = '\0'; // Ensure null-termination
+    }
+
+    // If the lowercase versions match, check for capitalization
+    if (strcmp(str1Lower, str2Lower) == 0) {
+        // Always add the exact match (str2) as a valid variation
+        strcpy(str2Variations[variationCount++], str2);
+
+        // If str2 starts with an uppercase letter, add uppercase version as well
+        if (isupper(str2[0])) {
+            for (int i = 0; str2[i]; i++) {
+                str2Variations[variationCount][i] = toupper(str2[i]);
+                str2Variations[variationCount][i+1] = '\0'; // Ensure null-termination
             }
-            // Convert to uppercase for comparison
-            char upperStr1[MAX_WORD_LENGTH];
-            for (int i = 0; i <= len1; i++) {
-                upperStr1[i] = toupper(str1[i]);
+            variationCount++;
+        } else { // If str2 starts with a lowercase letter, add "Hello" and "HELLO" variations
+            // Initial capital variation
+            strcpy(str2Variations[variationCount], str2);
+            str2Variations[variationCount][0] = toupper(str2Variations[variationCount][0]);
+            variationCount++;
+
+            // All caps variation
+            for (int i = 0; str2[i]; i++) {
+                str2Variations[variationCount][i] = toupper(str2[i]);
+                str2Variations[variationCount][i+1] = '\0'; // Ensure null-termination
             }
-            if (strcmp(upperStr1, str2) == 0) { // All uppercase match
-                return 0;
-            } 
-        } else if (islower(str2[0])) { // If dictArray word starts with lowercase
-            // Allow regular and initial capital variations
-            if (strcasecmp(str1, str2) == 0) { // Case-insensitive match
-                return 0;
-            } 
-            char initCapStr1[MAX_WORD_LENGTH];
-            strcpy(initCapStr1, str1);
-            initCapStr1[0] = toupper(initCapStr1[0]);
-            if (strcmp(initCapStr1, str2) == 0) {  // Initial capital match
-                return 0;
+            variationCount++;
+        }
+
+        // Check if str1 matches any of the acceptable variations of str2
+        for (int i = 0; i < variationCount; i++) {
+            if (strcmp(str1, str2Variations[i]) == 0) {
+                return 0; // Match found
             }
         }
+
+        return -1; // No acceptable match found
+    } else {
+        // If the lowercase versions do not match, return the lexical difference
+        return strcmp(str1Lower, str2Lower);
     }
-    // Fallback to case-insensitive comparison if none of the above conditions met
-    return strcasecmp(str1, str2);
 }
 
 // function to read the dictArray file and store words in an array
