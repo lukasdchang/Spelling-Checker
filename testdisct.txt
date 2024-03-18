@@ -6,4 +6,5 @@ fooBar
 aBc 
 combinations
 correct 
-all 
+all
+misspelled 

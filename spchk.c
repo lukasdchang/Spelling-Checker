@@ -37,11 +37,6 @@ int compareWords(const void *a, const void *b) {
 
     //printf("Comparing \"%s\" with \"%s\"\n", str1, str2);
 
-    // Compare directly if exactly the same (covers all caps and exact match)
-    if (strcmp(str1, str2) == 0){
-        return 0;
-    }
-    // Convert to lowercase and compare (covers initial cap and all lowercase)
     char lowerStr1[MAX_WORD_LENGTH], lowerStr2[MAX_WORD_LENGTH];
     strcpy(lowerStr1, str1);
     strcpy(lowerStr2, str2);
@@ -91,7 +86,7 @@ void readDictionary(const char* filename) {
     }
 
     close(file);
-    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, (const void *)strcmp); 
+    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords); 
 }
 
 void readTxt(const char* filename) {

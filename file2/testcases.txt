@@ -1,17 +1,23 @@
 Combinations: apple Apple APPLE ApPle
-Correct: all
+Correct: apple Apple APPLE
+Misspelled: ApPle
 
 Combinations: rutgers Rutgers RUTGERS ruTgers 
-Correct: Rutger RUTGERS 
+Correct: Rutgers RUTGERS 
+Misspelled: rutgers ruTgers
 
 Combinations: nsa NSA NSa 
 Correct: NSA
+Misspelled: nsa NSa
 
 Combinations: macdonald MacDonald MACDONALD maCdonAld
 Correct: MacDonald MACDONALD
+Misspelled: macdonald maCdonALd
 
 Combinations: foobar fooBar FooBar FOOBAR
 Correct: fooBar FooBar FOOBAR
+Misspelled: foobar
 
 Combinations: abc aBc ABc ABC 
 Correct: aBc ABc ABC
+Misspelled: abc
