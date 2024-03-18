@@ -28,4 +28,3 @@ well-kept (well-kept)
 high-quality (High-quality)
 
 Numbers should be ignored: $500
-

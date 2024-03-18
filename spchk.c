@@ -25,17 +25,17 @@ int wordArrayLength = 0;
 char dictArray[MAX_DICT_WORDS][MAX_WORD_LENGTH]; // array of every word in the dictionary file
 int dictArrayLength = 0;
 
-// function that compares two words to see if they match. If they match return a 0, if the compared is lower lexicographically return a negative
-//  if the compared is higher lexicographically return a positive. includes a capitalization checker. used by bsearch() in spellChecker()
+// function that converts two strings to it's lowercase versions. they match, it checks for capitalization by making all variations of acceptable capitalization
+// and checking if they match the first string. if they don't match it returns the lexical difference of the 2 strings for bsearch() in spellChecker()
 int compareWords(const void *a, const void *b) { 
     const char *str1 = (const char*)a;
     const char *str2 = (const char*)b;
     char str1Lower[MAX_WORD_LENGTH];
     char str2Lower[MAX_WORD_LENGTH];
-    char str2Variations[3][MAX_WORD_LENGTH]; // To store acceptable variations of str2
+    char str2Variations[3][MAX_WORD_LENGTH]; // To store variations of acceptable capitalization for str2
     int variationCount = 0;
 
-    // Convert str1 and str2 to lowercase
+    // Convert str1 and str2 to lowercase for comparison
     for (int i = 0; str1[i]; i++) {
         str1Lower[i] = tolower(str1[i]);
         str1Lower[i+1] = '\0'; // Ensure null-termination
@@ -72,7 +72,9 @@ int compareWords(const void *a, const void *b) {
         }
 
         // Check if str1 matches any of the acceptable variations of str2
+        //printf("Str1: %s, Str2: %s\n", str1, str2);
         for (int i = 0; i < variationCount; i++) {
+            //printf("%s\n", str2Variations[i]);
             if (strcmp(str1, str2Variations[i]) == 0) {
                 return 0; // Match found
             }
