@@ -25,6 +25,30 @@ int numWordArray = 0;
 char dictionary[MAX_DICT_WORDS][MAX_WORD_LENGTH]; // Array to store dictionary words
 int numDictionaryWords = 0;
 
+void toLowerCase(char *word) {
+    for (int i = 0; word[i]; i++) {
+        word[i] = tolower(word[i]);
+    }
+}
+
+int compareWords(const void *a, const void *b) {
+    const char *str1 = (const char*)a;
+    const char *str2 = (const char*)b;
+
+    //printf("Comparing \"%s\" with \"%s\"\n", str1, str2);
+
+    // Compare directly if exactly the same (covers all caps and exact match)
+    if (strcmp(str1, str2) == 0) return 0;
+    // Convert to lowercase and compare (covers initial cap and all lowercase)
+    char lowerStr1[MAX_WORD_LENGTH], lowerStr2[MAX_WORD_LENGTH];
+    strcpy(lowerStr1, str1);
+    strcpy(lowerStr2, str2);
+    toLowerCase(lowerStr1);
+    toLowerCase(lowerStr2);
+    
+    return strcmp(lowerStr1, lowerStr2);
+}
+
 // Function to read the dictionary file and store words in an array
 void readDictionary(const char* filename) {
     int file = open(filename, O_RDONLY);
@@ -64,6 +88,7 @@ void readDictionary(const char* filename) {
     }
 
     close(file);
+    qsort(dictionary, numDictionaryWords, MAX_WORD_LENGTH, compareWords); 
 }
 
 void readTxt(const char* filename) {
@@ -119,39 +144,6 @@ void readTxt(const char* filename) {
     close(file);
 }
 
-
-
-// Function to perform binary search to check if a word exists in the dictionary
-int binarySearch(const char* word) {
-    // Convert the word to lowercase
-    char lowercase_word[MAX_WORD_LENGTH];
-    int i = 0;
-    while (word[i]) {
-        lowercase_word[i] = tolower(word[i]);
-        i++;
-    }
-    lowercase_word[i] = '\0';
-
-    // Use bsearch to perform binary search
-    char (*result)[MAX_WORD_LENGTH] = bsearch(lowercase_word, dictionary, numDictionaryWords, sizeof(dictionary[0]), (int (*)(const void *, const void *))strcmp);
-
-    if (result != NULL) {
-        return result - dictionary;
-    }
-
-    return -1;
-}
-
-// Function to check spelling of words in wordArray against the dictionary
-void spellChecker() {
-    for (int i = 0; i < numWordArray; i++) {
-        int index = binarySearch(wordArray[i].word);
-        if (index == -1) {
-            //printf("%s (%s:%d,%d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
-        }
-    }
-}
-
 void printDictionary() { // testing purposes
     printf("Words in the dictionary:\n");
     for (int i = 0; i < numDictionaryWords; i++) {
@@ -198,6 +190,18 @@ void nextFile(const char* dirname) {
     closedir(dir);
 }
 
+
+
+void checkSpelling() {
+    for (int i = 0; i < numWordArray; i++) {
+        //printf("%zu \n", strlen(wordArray[i].word));
+        if (!bsearch(wordArray[i].word, dictionary, strlen(wordArray[i].word), MAX_WORD_LENGTH, compareWords)) {
+            printf("Misspelled Word: %s, File Directory: %s (%d, %d)\n", wordArray[i].word, wordArray[i].file_directory, wordArray[i].line, wordArray[i].column);
+        }
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         printf("Invalid number of arguments.\n");
@@ -206,13 +210,14 @@ int main(int argc, char* argv[]) {
 
     readDictionary(argv[1]); // Read the dictionary file specified in the first argument
 
-    //printDictionary();
 
     nextFile(argv[2]); // Process text files specified in the second argument
 
-    printWords();
+    //printDictionary();
+    //printWords();
 
-    spellChecker(); // Check spelling against the dictionary
+    checkSpelling();
+
 
     return EXIT_SUCCESS;
 }
