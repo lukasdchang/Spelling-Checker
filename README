@@ -1,0 +1,84 @@
+Lukas Chang - ldc105
+Yousef Naam - yn164
+
+Design Notes
+    - We utilized a recursive directory traversal to search for every .txt file within a given directory name. Before each recursive call, the program
+        calls a method that stores all the words along with it's info such as the directory its from, the line and column, and the actual word.
+
+    - To store the words, we made a function called readTextFile which we decided to use a struct called words that used to store the information about each word. 
+        For the logic of splitting up the text files into smaller strings, we originally thought of using strtok() to tokenize the string. Though it worked for a moment
+        there was a lot we didn't know about the function we decided to opt to use buffers and strncpy as these we were more familiar with for a more complicated task. The way we made it 
+        work is the function creates a buffer to store the data read from the file. Then the program iterates the buffer and looks for anything that may separate words apart such as 
+        punctuation, symbols, and whitespaces. Using this method did not come without problems. Initially when we made it we ran into an odd problem where some words were randomly
+        disappearing and not being added into the wordArray and these words didnt have anthing in common. Took a while to find the issue but found out it was because the buffer 
+        was running out of space and would just not add certain words if it ran out. So we changed the buffer size #define at the top from 100 to 1000 and it resolved all the issues.
+        - To keep track of words found in the text files we used a struct array called wordArray which keeps track of the words and its information. 
+
+    - To store the words that the program found in the dictionary files, we made a function called readDictionaryFile(). For this function we actually used the strtok() function as it 
+        did simplify a lot of our code making it look much cleaner. Because this purpose of this function was comparably simpler than readTextFile(), using strtok() was our choice. Becuase 
+        we planned on using a binary search function to find whether words in the wordArray existed in the dictArray, we had to sort the dictArray after it was created by using qsort(). 
+        qsort() is used with the help of a helper function called compareWords which is also used by the binary search function. We used a helper function because it helped organize the words
+        with their capitalization.   
+        - To keep track of words found in the dictionary files we used a char array called dictArray
+
+    - For the spellChecker function, it is relatively simple since we decided to use the bsearch() function instead of coding our own binary search algorithm, though tricky to get working at first,
+        once we got it working, it made things much simpler and easier to understand. The function would then print out the information of the word that is "misspelled" if it was not found by bsearch()
+        - for bsearch() to work, it takes in a comparison function as a parameter. So we made compareWords() which did the heavy lifting for the bsearch() function. First we converted the two strings
+            to lowercase temporarily for comparison regardless of capitalization. We used strcmp() to check if the lowercase versions matched. If they did, the program would make all the variations
+            of acceptable capitalization. There were two cases it would make variations for, if the first letter of the word is capital and if the first letter of the word is lowercase. The program
+            would compare the first string with all of these variations, if any of them matched the string would be considered spelt correctly. If not, it would return the lexical difference for 
+            bsearch() to continue searching for more words.
+
+    - Then in the main we just call each of the functions in order of: readDictionaryFile, nextFile, checkSPelling. 
+        
+
+
+Testing Plan:
+    Requirements:
+        - words in the dictionary that are capitalized SHOULD be capital in the input file to be considered spelled correctly
+        - should ignore trailing punctuation
+        - should ignore numbers
+        - should separate hyphenated words
+    How is it violated:
+        - say the word "Rutgers" is in the dictionary file, if the word "rutgers" is in the input file and is not printed when the program is run then it is violated.
+        - prints out trailing punctuation 
+        - prints out words
+        - prints out hyphenated words in full and not separated
+        
+
+    Testcases:
+        Dictionary Files:
+            - testdict.txt
+                usually tested with testcases.txt, we put most of the words within the testcases.txt file into this file, some with specific capitalization such as "Rutgers" meaning if the input file had
+                punctuation like "rutgers" it would be considered misspelled.
+        Input files:
+            - "file"
+                file is a nested directory containing another directory "file1" within it to test if nextFile worked properly. We would know if it worked when we ran the program words that appeared within 
+                a text file that was inside of "file1" appeared in the output along content from another text file in the "file" directory. 
+                - testcases.txt
+                    - a file that mostly tests capitalization along with a few other various tests. 
+                        formatted by Combinations, Correct, Misspelled.
+                    - i put all combinations of capitalization for a few words 
+                    - to tell if our code worked properly the output for the file had to only print out the words after the Misspelled:
+                    - in this file we also tested hyphenation, numbers, and trailing punctuation. 
+                - testcase2.txt  
+                    - has an even more variety of tests
+        Issues:
+            - the txt files must always have an empty line after the last word if we wanted all words to be read. meaning if the last word was on the last line, the program would not read it.
+                 
+
+
+Commands
+    To run normally:
+        - Compile -> gcc -o spchk spchk.c
+        - Run code -> ./spchk (dictionary).txt (directory name)
+            For example: 
+                ./spchk dict_test.txt test1
+                Running this will give the program dict_test.txt as a dictionary to refer to and test1 as a directory to recursively search through
+    To run with make file:
+        - Compile and make .o file -> make
+        - Run test -> make test
+        - Input files and run -> make run (dictionary).txt (diretory name)
+        - Delete spchk.o -> make clean
+
+

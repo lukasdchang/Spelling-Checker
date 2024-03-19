@@ -9,7 +9,7 @@
 #include <limits.h>
 #include <ctype.h>
 
-#define MAX_WORD_LENGTH 100
+#define MAX_WORD_LENGTH 1000
 #define MAX_DICT_WORDS 200000
 
 typedef struct { // struct to store information about each word, used by readTextFile
@@ -151,6 +151,7 @@ void readTextFile(const char* filename) {
     while ((bytes_read = read(file, buffer, sizeof(buffer))) > 0 && wordArrayLength < MAX_DICT_WORDS) {
         for (ssize_t i = 0; i < bytes_read && wordArrayLength < MAX_DICT_WORDS; i++) {
             char currentChar = buffer[i];
+            //printf("Char: %c, isalnum: %d\n", currentChar, !isalnum(currentChar));
 
             if ((!isalnum(currentChar) && currentChar != '\'' && currentChar != '-') || isdigit(currentChar)) {
                 if (i > wordStartIndex) { 
@@ -158,7 +159,8 @@ void readTextFile(const char* filename) {
                     if (length >= MAX_WORD_LENGTH) {
                         length = MAX_WORD_LENGTH - 1;
                     }
-
+                    //printf("Buffer contents: %s\n", buffer);
+                    //printf("Buffer contents: %.*s length: %d\n", length, buffer + wordStartIndex, length);
                     // Copy the word into wordArray
                     strncpy(wordArray[wordArrayLength].word, buffer + wordStartIndex, length);
                     wordArray[wordArrayLength].word[length] = '\0'; // Null terminate word
@@ -244,7 +246,7 @@ void checkSpelling() { // uses binary search (bsearch()) to check whether words 
     for (int i = 0; i < wordArrayLength; i++) {
         if (bsearch(wordArray[i].word, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
             // prints words formatted: file directory (line, column): word 
-            //printf("%s (%d, %d): %s\n", wordArray[i].file_directory, wordArray[i].line, wordArray[i].column, wordArray[i].word);
+            printf("%s (%d, %d): %s\n", wordArray[i].file_directory, wordArray[i].line, wordArray[i].column, wordArray[i].word);
         }
     }
 }
@@ -274,7 +276,7 @@ int main(int argc, char* argv[]) {
     nextFile(argv[2]); // Process text files specified in the second argument
 
     //printDictArray();
-    printWordArray();
+    //printWordArray();
 
     checkSpelling(); 
 

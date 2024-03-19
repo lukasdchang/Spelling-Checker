@@ -28,3 +28,5 @@ well-kept (well-kept)
 high-quality (high-quality)
 
 Numbers should be ignored: $500
+
+"yup" yup 'yup' (yup) 
