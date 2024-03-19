@@ -1,10 +1,4 @@
-table
-chiar
-window
-book
-lamp
-doge
-cat 
-treee
-phone
-car
+one-piece
+chicken-tender
+bro-i-hate-this 
+test-code 
