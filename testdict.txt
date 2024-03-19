@@ -23,5 +23,15 @@ cat
 tree
 phone
 car
-well-kept
-high-quality
+well
+kept
+high
+
+
+
+
+
+
+
+
+

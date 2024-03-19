@@ -142,19 +142,16 @@ void readTextFile(const char* filename) {
         exit(EXIT_FAILURE);
     }
 
-    //variables to store word data
     char buffer[MAX_WORD_LENGTH];
     ssize_t bytes_read;
     int lineNum = 1;
     int columnNum = 1;
     int wordStartIndex = 0;
 
-    // read file content into buffer in chunks
     while ((bytes_read = read(file, buffer, sizeof(buffer))) > 0 && wordArrayLength < MAX_DICT_WORDS) {
         for (ssize_t i = 0; i < bytes_read && wordArrayLength < MAX_DICT_WORDS; i++) {
             char currentChar = buffer[i];
 
-            // check for word boundaries
             if ((!isalnum(currentChar) && currentChar != '\'' && currentChar != '-') || isdigit(currentChar)) {
                 if (i > wordStartIndex) { 
                     int length = i - wordStartIndex;
@@ -162,20 +159,40 @@ void readTextFile(const char* filename) {
                         length = MAX_WORD_LENGTH - 1;
                     }
 
-                    // copy the word into wordArray
+                    // Copy the word into wordArray
                     strncpy(wordArray[wordArrayLength].word, buffer + wordStartIndex, length);
-                    wordArray[wordArrayLength].word[length] = '\0'; // null terminate word
+                    wordArray[wordArrayLength].word[length] = '\0'; // Null terminate word
 
-                    // store word data
-                    strncpy(wordArray[wordArrayLength].file_directory, filename, PATH_MAX); // file directory
-                    wordArray[wordArrayLength].line = lineNum; // line number
-                    wordArray[wordArrayLength].column = columnNum - (i - wordStartIndex); // column number
+                    // Check for hyphenated words
+                    char *hyphenatedWord = strchr(wordArray[wordArrayLength].word, '-');
+                    if (hyphenatedWord != NULL) {
+                        // Split the hyphenated word and check each component
+                        char *component = strtok(wordArray[wordArrayLength].word, "-");
+                        while (component != NULL) {
+                            if (bsearch(component, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
+                                // If any component is not found, mark the word as misspelled
+                                printf("%s (%d, %d): %s\n", wordArray[wordArrayLength].file_directory, wordArray[wordArrayLength].line, wordArray[wordArrayLength].column, wordArray[wordArrayLength].word);
+                                break;
+                            }
+                            component = strtok(NULL, "-");
+                        }
+                    } else {
+                        // If not hyphenated, check the word as usual
+                        if (bsearch(wordArray[wordArrayLength].word, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
+                            printf("%s (%d, %d): %s\n", wordArray[wordArrayLength].file_directory, wordArray[wordArrayLength].line, wordArray[wordArrayLength].column, wordArray[wordArrayLength].word);
+                        }
+                    }
+
+                    // Store word data
+                    strncpy(wordArray[wordArrayLength].file_directory, filename, PATH_MAX); // File directory
+                    wordArray[wordArrayLength].line = lineNum; // Line number
+                    wordArray[wordArrayLength].column = columnNum - (i - wordStartIndex); // Column number
 
                     wordArrayLength++;
                 }
-                wordStartIndex = i + 1; // next word
+                wordStartIndex = i + 1; // Next word
             }
-            // update line and column numbers
+            // Update line and column numbers
             if (currentChar == '\n') {
                 lineNum++;
                 columnNum = 1;
@@ -192,6 +209,7 @@ void readTextFile(const char* filename) {
 
     close(file);
 }
+
 
 
 // function to recursively search through a directory and process text files given a directory name
