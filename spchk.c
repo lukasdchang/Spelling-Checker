@@ -171,15 +171,10 @@ void readTextFile(const char* filename) {
                         while (component != NULL) {
                             if (bsearch(component, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
                                 // If any component is not found, mark the word as misspelled
-                                printf("%s (%d, %d): %s\n", wordArray[wordArrayLength].file_directory, wordArray[wordArrayLength].line, wordArray[wordArrayLength].column, wordArray[wordArrayLength].word);
+                                //printf("%s (%d, %d): %s\n", wordArray[wordArrayLength].file_directory, wordArray[wordArrayLength].line, wordArray[wordArrayLength].column, wordArray[wordArrayLength].word);
                                 break;
                             }
                             component = strtok(NULL, "-");
-                        }
-                    } else {
-                        // If not hyphenated, check the word as usual
-                        if (bsearch(wordArray[wordArrayLength].word, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
-                            printf("%s (%d, %d): %s\n", wordArray[wordArrayLength].file_directory, wordArray[wordArrayLength].line, wordArray[wordArrayLength].column, wordArray[wordArrayLength].word);
                         }
                     }
 
@@ -249,7 +244,7 @@ void checkSpelling() { // uses binary search (bsearch()) to check whether words 
     for (int i = 0; i < wordArrayLength; i++) {
         if (bsearch(wordArray[i].word, dictArray, dictArrayLength, MAX_WORD_LENGTH, compareWords) == NULL) {
             // prints words formatted: file directory (line, column): word 
-            printf("%s (%d, %d): %s\n", wordArray[i].file_directory, wordArray[i].line, wordArray[i].column, wordArray[i].word);
+            //printf("%s (%d, %d): %s\n", wordArray[i].file_directory, wordArray[i].line, wordArray[i].column, wordArray[i].word);
         }
     }
 }
@@ -279,7 +274,7 @@ int main(int argc, char* argv[]) {
     nextFile(argv[2]); // Process text files specified in the second argument
 
     //printDictArray();
-    //printWordArrays();
+    printWordArray();
 
     checkSpelling(); 
 

@@ -25,6 +25,6 @@ Misspelled: abc
 these words should be considered misspelt
 
 well-kept (well-kept)
-high-quality (High-quality)
+high-quality (high-quality)
 
 Numbers should be ignored: $500
